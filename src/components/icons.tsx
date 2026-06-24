@@ -118,3 +118,88 @@ export function OpenBookIcon({ size = 56, color = '#000', strokeWidth = 1.6 }: I
     </Svg>
   );
 }
+
+export function ChevronLeftIcon({ size = 24, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Polyline points="15 18 9 12 15 6" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function CloseIcon({ size = 24, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Line x1="18" y1="6" x2="6" y2="18" {...strokeProps(color, strokeWidth)} />
+      <Line x1="6" y1="6" x2="18" y2="18" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function MoreVerticalIcon({ size = 22, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Circle cx="12" cy="5" r="1.6" {...strokeProps(color, strokeWidth)} />
+      <Circle cx="12" cy="12" r="1.6" {...strokeProps(color, strokeWidth)} />
+      <Circle cx="12" cy="19" r="1.6" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function CheckIcon({ size = 18, color = '#000', strokeWidth = 2.4 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Polyline points="20 6 9 17 4 12" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function CameraIcon({ size = 22, color = '#000', strokeWidth = 1.8 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path
+        d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+        {...strokeProps(color, strokeWidth)}
+      />
+      <Circle cx="12" cy="13" r="4" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function ImageIcon({ size = 22, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" {...strokeProps(color, strokeWidth)} />
+      <Circle cx="8.5" cy="8.5" r="1.5" {...strokeProps(color, strokeWidth)} />
+      <Polyline points="21 15 16 10 5 21" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function PencilIcon({ size = 18, color = '#000', strokeWidth = 1.8 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function TrashIcon({ size = 16, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Polyline points="3 6 5 6 21 6" {...strokeProps(color, strokeWidth)} />
+      <Path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" {...strokeProps(color, strokeWidth)} />
+      <Line x1="10" y1="11" x2="10" y2="17" {...strokeProps(color, strokeWidth)} />
+      <Line x1="14" y1="11" x2="14" y2="17" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+/** Speech-bubble quote glyph (empty-state for 구절). */
+export function QuoteIcon({ size = 30, color = '#000', strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path d="M3 21l1.5-4.5a8 8 0 1 1 3 3z" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
