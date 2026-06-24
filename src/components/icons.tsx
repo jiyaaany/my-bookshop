@@ -203,3 +203,64 @@ export function QuoteIcon({ size = 30, color = '#000', strokeWidth = 1.6 }: Icon
     </Svg>
   );
 }
+
+export function ClockIcon({ size = 20, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Circle cx="12" cy="12" r="10" {...strokeProps(color, strokeWidth)} />
+      <Polyline points="12 6 12 12 16 14" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function SortIcon({ size = 20, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Line x1="3" y1="7" x2="21" y2="7" {...strokeProps(color, strokeWidth)} />
+      <Line x1="3" y1="12" x2="21" y2="12" {...strokeProps(color, strokeWidth)} />
+      <Line x1="3" y1="17" x2="21" y2="17" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function SunIcon({ size = 20, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Circle cx="12" cy="12" r="5" {...strokeProps(color, strokeWidth)} />
+      <Line x1="12" y1="1" x2="12" y2="3" {...strokeProps(color, strokeWidth)} />
+      <Line x1="12" y1="21" x2="12" y2="23" {...strokeProps(color, strokeWidth)} />
+      <Line x1="4.2" y1="4.2" x2="5.6" y2="5.6" {...strokeProps(color, strokeWidth)} />
+      <Line x1="18.4" y1="18.4" x2="19.8" y2="19.8" {...strokeProps(color, strokeWidth)} />
+      <Line x1="1" y1="12" x2="3" y2="12" {...strokeProps(color, strokeWidth)} />
+      <Line x1="21" y1="12" x2="23" y2="12" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function CloudIcon({ size = 20, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function DownloadIcon({ size = 20, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" {...strokeProps(color, strokeWidth)} />
+      <Polyline points="7 10 12 15 17 10" {...strokeProps(color, strokeWidth)} />
+      <Line x1="12" y1="15" x2="12" y2="3" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+export function LogOutIcon({ size = 18, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" {...strokeProps(color, strokeWidth)} />
+      <Polyline points="16 17 21 12 16 7" {...strokeProps(color, strokeWidth)} />
+      <Line x1="21" y1="12" x2="9" y2="12" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}

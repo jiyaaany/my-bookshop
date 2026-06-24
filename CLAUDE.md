@@ -83,7 +83,11 @@ The "Record" entity is typed as **`ReadingRecord`** to avoid clashing with TS's 
 - Every screen implements the states from the design: 기본 / 빈 상태 / 로딩 / 에러.
 - Commits: imperative, scoped (e.g. `feat(stats): 통계 화면 구현`). Korean or English ok. Never commit secrets.
 
-## Implementation order
+## Implementation order — all 7 screens done ✅
 
-책장 → 책 상세 → 책 추가(스캔) → 구절 추가 → 기록 작성 → 통계 ✅ → 설정.
-(통계 + foundation done first per request; 책장/설정 are themed placeholders pending their per-screen pass.)
+책장 ✅ → 책 상세 ✅ → 책 추가(스캔/직접입력) ✅ → 구절 추가/편집 ✅ → 기록 작성/편집 ✅ → 통계 ✅ → 설정 ✅.
+
+Each screen was built on its own branch (`claude/<screen>`), stacked on the
+previous, with a matching backend work-request in `docs/backend-requests/`.
+Backend (Supabase) is spec'd but not implemented in this repo; the local store
+is the seam (`src/lib/store`, `src/lib/db`, `src/lib/sync`).
