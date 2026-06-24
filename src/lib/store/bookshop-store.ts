@@ -86,6 +86,61 @@ export function deleteBook(id: string) {
   }));
 }
 
+export interface NewBookInput {
+  title: string;
+  author: string;
+  publisher?: string;
+  pageCount?: number;
+  isbn?: string;
+  coverImageUrl?: string;
+  readingStatus: Book['readingStatus'];
+  tagIds: string[];
+}
+
+export function addBook(input: NewBookInput): string {
+  const id = newId('book');
+  const at = nowIso();
+  const book: Book = {
+    id,
+    title: input.title.trim(),
+    author: input.author.trim(),
+    publisher: input.publisher?.trim() || undefined,
+    pageCount: input.pageCount,
+    isbn: input.isbn?.trim() || undefined,
+    coverImageUrl: input.coverImageUrl,
+    readingStatus: input.readingStatus,
+    tagIds: input.tagIds,
+    startedDate: input.readingStatus === 'READING' ? at : undefined,
+    finishedDate: input.readingStatus === 'DONE' ? at : undefined,
+    createdAt: at,
+    updatedAt: at,
+  };
+  bookshopStore.setState((s) => ({ books: [book, ...s.books] }));
+  return id;
+}
+
+/** Find tags by name (case-insensitive) or create them; returns their ids. */
+export function ensureTags(names: string[]): string[] {
+  const ids: string[] = [];
+  bookshopStore.setState((s) => {
+    const tags = [...s.tags];
+    for (const raw of names) {
+      const name = raw.trim();
+      if (!name) continue;
+      const existing = tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        ids.push(existing.id);
+      } else {
+        const tag = { id: newId('tag'), name };
+        tags.push(tag);
+        ids.push(tag.id);
+      }
+    }
+    return { tags };
+  });
+  return ids;
+}
+
 // ── Hooks ───────────────────────────────────────────────────────
 
 export const useBooks = () => useStore(bookshopStore, (s) => s.books);

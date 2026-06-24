@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -31,12 +32,8 @@ export default function LibraryScreen() {
 
   const cycleSort = () => setSort((s) => SORT_CYCLE[(SORT_CYCLE.indexOf(s) + 1) % SORT_CYCLE.length]);
 
-  const openBook = (_book: Book) => {
-    // TODO: router.push(`/book/${_book.id}`) once 책 상세 lands.
-  };
-  const addBook = () => {
-    // TODO: router.push('/book/new') once 책 추가 lands.
-  };
+  const openBook = (book: Book) => router.push(`/book/${book.id}`);
+  const addBook = () => router.push('/book/new');
 
   const loading = status === 'loading';
   const firstRun = !loading && total === 0;
