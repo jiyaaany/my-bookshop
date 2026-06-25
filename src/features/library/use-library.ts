@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 
-import { useBooks } from '@/lib/store/bookshop-store';
+import { useBooks, useTags } from '@/lib/store/bookshop-store';
 import {
   READING_STATUS_ORDER,
   type Book,
@@ -45,8 +45,9 @@ export interface LibraryView {
   counts: Record<StatusFilter, number>;
 }
 
-export function useLibrary(filter: StatusFilter, sort: SortOrder): LibraryView {
+export function useLibrary(filter: StatusFilter, sort: SortOrder, query = ''): LibraryView {
   const all = useBooks();
+  const tags = useTags();
 
   return useMemo(() => {
     const counts: Record<StatusFilter, number> = {
@@ -57,9 +58,21 @@ export function useLibrary(filter: StatusFilter, sort: SortOrder): LibraryView {
     };
     for (const b of all) counts[b.readingStatus] += 1;
 
-    const filtered = filter === 'ALL' ? all : all.filter((b) => b.readingStatus === filter);
-    return { books: sortBooks(filtered, sort), total: all.length, counts };
-  }, [all, filter, sort]);
+    let list = filter === 'ALL' ? all : all.filter((b) => b.readingStatus === filter);
+
+    const q = query.trim().toLowerCase();
+    if (q) {
+      const nameById = new Map(tags.map((t) => [t.id, t.name.toLowerCase()]));
+      list = list.filter(
+        (b) =>
+          b.title.toLowerCase().includes(q) ||
+          b.author.toLowerCase().includes(q) ||
+          b.tagIds.some((id) => (nameById.get(id) ?? '').includes(q)),
+      );
+    }
+
+    return { books: sortBooks(list, sort), total: all.length, counts };
+  }, [all, tags, filter, sort, query]);
 }
 
 export const STATUS_FILTERS: StatusFilter[] = ['ALL', ...READING_STATUS_ORDER];

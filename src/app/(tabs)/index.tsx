@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { ChevronDownIcon, OpenBookIcon, PlusIcon, SearchIcon } from '@/components/icons';
+import { ChevronDownIcon, CloseIcon, OpenBookIcon, PlusIcon, SearchIcon } from '@/components/icons';
 import { BookCard } from '@/components/ui/book-card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
@@ -28,19 +28,29 @@ export default function LibraryScreen() {
   const status = useStatus();
   const [filter, setFilter] = useState<StatusFilter>('ALL');
   const [sort, setSort] = useState<SortOrder>('recent');
-  const { books, total, counts } = useLibrary(filter, sort);
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
+  const { books, total, counts } = useLibrary(filter, sort, searching ? query : '');
 
   const cycleSort = () => setSort((s) => SORT_CYCLE[(SORT_CYCLE.indexOf(s) + 1) % SORT_CYCLE.length]);
 
   const openBook = (book: Book) => router.push(`/book/${book.id}`);
   const addBook = () => router.push('/book/new');
+  const closeSearch = () => {
+    setSearching(false);
+    setQuery('');
+  };
 
   const loading = status === 'loading';
   const firstRun = !loading && total === 0;
 
   return (
     <Screen>
-      <Header onSearch={() => {}} />
+      {searching ? (
+        <SearchBar value={query} onChange={setQuery} onClose={closeSearch} />
+      ) : (
+        <Header onSearch={() => setSearching(true)} />
+      )}
 
       {loading ? (
         <LibrarySkeleton />
@@ -70,8 +80,11 @@ export default function LibraryScreen() {
               <FilterChips filter={filter} counts={counts} onChange={setFilter} />
               <View style={styles.countRow}>
                 <Text style={[styles.countText, { color: theme.textSecondary }]}>
-                  {STATUS_FILTER_LABEL[filter]}{' '}
-                  <Text style={{ color: theme.primary, fontWeight: '700' }}>{counts[filter]}</Text>권
+                  {searching ? '검색 결과 ' : `${STATUS_FILTER_LABEL[filter]} `}
+                  <Text style={{ color: theme.primary, fontWeight: '700' }}>
+                    {searching ? books.length : counts[filter]}
+                  </Text>
+                  권
                 </Text>
                 <Pressable onPress={cycleSort} style={styles.sortBtn} accessibilityRole="button">
                   <Text style={[styles.sortText, { color: theme.primary }]}>{SORT_LABEL[sort]}</Text>
@@ -83,7 +96,7 @@ export default function LibraryScreen() {
           ListEmptyComponent={
             <View style={styles.inlineEmpty}>
               <Text style={[styles.inlineEmptyText, { color: theme.textSecondary }]}>
-                이 상태의 책이 아직 없어요.
+                {searching ? '검색 결과가 없어요.' : '이 상태의 책이 아직 없어요.'}
               </Text>
             </View>
           }
@@ -111,6 +124,44 @@ function Header({ onSearch }: { onSearch: () => void }) {
         accessibilityLabel="검색"
         style={[styles.searchBtn, { backgroundColor: theme.surfaceMuted }]}>
         <SearchIcon size={20} color={theme.primary} />
+      </Pressable>
+    </View>
+  );
+}
+
+// ── Search bar ──────────────────────────────────────────────────
+
+function SearchBar({
+  value,
+  onChange,
+  onClose,
+}: {
+  value: string;
+  onChange: (t: string) => void;
+  onClose: () => void;
+}) {
+  const theme = useTheme();
+  return (
+    <View style={styles.searchRow}>
+      <View style={[styles.searchField, { backgroundColor: theme.surfaceMuted }]}>
+        <SearchIcon size={18} color={theme.textSecondary} />
+        <TextInput
+          value={value}
+          onChangeText={onChange}
+          placeholder="제목 · 저자 · 태그 검색"
+          placeholderTextColor={theme.textSecondary}
+          autoFocus
+          returnKeyType="search"
+          style={[styles.searchInput, { color: theme.heading }]}
+        />
+        {value.length > 0 ? (
+          <Pressable onPress={() => onChange('')} hitSlop={8} accessibilityLabel="지우기">
+            <CloseIcon size={16} color={theme.textSecondary} />
+          </Pressable>
+        ) : null}
+      </View>
+      <Pressable onPress={onClose} hitSlop={8} accessibilityRole="button">
+        <Text style={[styles.searchCancel, { color: theme.primary }]}>취소</Text>
       </Pressable>
     </View>
   );
@@ -182,6 +233,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: SCREEN_PAD,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.three,
+  },
+  searchField: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 42,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+  },
+  searchInput: { flex: 1, fontSize: 14.5, padding: 0 },
+  searchCancel: { fontSize: 14.5, fontWeight: '600' },
 
   listContent: { paddingHorizontal: SCREEN_PAD, paddingBottom: 130 },
   listHeader: { paddingBottom: Spacing.three },
