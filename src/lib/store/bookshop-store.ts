@@ -141,6 +141,49 @@ export function ensureTags(names: string[]): string[] {
   return ids;
 }
 
+// ── Quote actions ───────────────────────────────────────────────
+
+export function addQuote(bookId: string, text: string, pageNumber?: number): string {
+  const id = newId('quote');
+  const quote: Quote = { id, bookId, text: text.trim(), pageNumber, createdAt: nowIso() };
+  bookshopStore.setState((s) => ({ quotes: [quote, ...s.quotes] }));
+  return id;
+}
+
+export function updateQuote(id: string, patch: { text?: string; pageNumber?: number }) {
+  bookshopStore.setState((s) => ({
+    quotes: s.quotes.map((q) =>
+      q.id === id
+        ? { ...q, ...patch, text: patch.text != null ? patch.text.trim() : q.text }
+        : q,
+    ),
+  }));
+}
+
+export function deleteQuote(id: string) {
+  bookshopStore.setState((s) => ({ quotes: s.quotes.filter((q) => q.id !== id) }));
+}
+
+// ── Record actions ──────────────────────────────────────────────
+
+export function addRecord(bookId: string, title: string, body: string): string {
+  const id = newId('record');
+  const at = nowIso();
+  const record: ReadingRecord = { id, bookId, title: title.trim(), body, createdAt: at, updatedAt: at };
+  bookshopStore.setState((s) => ({ records: [record, ...s.records] }));
+  return id;
+}
+
+export function updateRecord(id: string, patch: { title?: string; body?: string }) {
+  bookshopStore.setState((s) => ({
+    records: s.records.map((r) => (r.id === id ? { ...r, ...patch, updatedAt: nowIso() } : r)),
+  }));
+}
+
+export function deleteRecord(id: string) {
+  bookshopStore.setState((s) => ({ records: s.records.filter((r) => r.id !== id) }));
+}
+
 // ── Hooks ───────────────────────────────────────────────────────
 
 export const useBooks = () => useStore(bookshopStore, (s) => s.books);
@@ -158,3 +201,7 @@ export const useRecordsFor = (bookId: string | undefined) =>
   useStore(bookshopStore, (s) => s.records.filter((r) => r.bookId === bookId));
 export const useTagsByIds = (ids: string[]) =>
   useStore(bookshopStore, (s) => s.tags.filter((t) => ids.includes(t.id)));
+export const useQuote = (id: string | undefined) =>
+  useStore(bookshopStore, (s) => s.quotes.find((q) => q.id === id));
+export const useRecord = (id: string | undefined) =>
+  useStore(bookshopStore, (s) => s.records.find((r) => r.id === id));
