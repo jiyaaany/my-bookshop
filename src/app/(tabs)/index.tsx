@@ -5,13 +5,15 @@ import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 import { ChevronDownIcon, CloseIcon, OpenBookIcon, PlusIcon, SearchIcon } from '@/components/icons';
 import { BookCard } from '@/components/ui/book-card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import { Fab } from '@/components/ui/fab';
 import { Screen } from '@/components/ui/screen';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TagChip } from '@/components/ui/tag-chip';
 import { Spacing, Type } from '@/constants/theme';
 import { SORT_CYCLE, SORT_LABEL, STATUS_FILTERS, useLibrary } from '@/features/library/use-library';
-import { setPreferences, usePreferences, useStatus } from '@/lib/store/bookshop-store';
+import { retryBootstrap } from '@/lib/store/bootstrap';
+import { setPreferences, usePreferences, useStatus, useStoreError } from '@/lib/store/bookshop-store';
 import { useTheme } from '@/hooks/use-theme';
 import { STATUS_FILTER_LABEL, type Book, type StatusFilter } from '@/types/models';
 
@@ -20,6 +22,7 @@ const SCREEN_PAD = 22;
 export default function LibraryScreen() {
   const theme = useTheme();
   const status = useStatus();
+  const error = useStoreError();
   const [filter, setFilter] = useState<StatusFilter>('ALL');
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
@@ -38,7 +41,8 @@ export default function LibraryScreen() {
   };
 
   const loading = status === 'loading';
-  const firstRun = !loading && total === 0;
+  const errored = status === 'error';
+  const firstRun = !loading && !errored && total === 0;
 
   return (
     <Screen>
@@ -50,6 +54,12 @@ export default function LibraryScreen() {
 
       {loading ? (
         <LibrarySkeleton />
+      ) : errored ? (
+        <ErrorState
+          title="책장을 불러오지 못했어요"
+          description={error ?? '네트워크 상태를 확인하고 다시 시도해 주세요.'}
+          onRetry={() => void retryBootstrap()}
+        />
       ) : firstRun ? (
         <EmptyState
           icon={<OpenBookIcon size={56} color="#BC8460" />}
@@ -99,7 +109,7 @@ export default function LibraryScreen() {
         />
       )}
 
-      {!firstRun && !loading ? <Fab onPress={addBook} /> : null}
+      {!firstRun && !loading && !errored ? <Fab onPress={addBook} /> : null}
     </Screen>
   );
 }

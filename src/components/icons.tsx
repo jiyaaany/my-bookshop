@@ -264,3 +264,30 @@ export function LogOutIcon({ size = 18, color = '#000', strokeWidth = 2 }: IconP
     </Svg>
   );
 }
+
+/** Cloud with a slash — failed cloud load / offline illustration. */
+export function CloudOffIcon({ size = 56, color = '#000', strokeWidth = 1.6 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Path
+        d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3"
+        {...strokeProps(color, strokeWidth)}
+      />
+      <Line x1="1" y1="1" x2="23" y2="23" {...strokeProps(color, strokeWidth)} />
+    </Svg>
+  );
+}
+
+/** Circular arrows — retry / refresh. */
+export function RefreshIcon({ size = 18, color = '#000', strokeWidth = 2 }: IconProps) {
+  return (
+    <Svg {...base(size)}>
+      <Polyline points="23 4 23 10 17 10" {...strokeProps(color, strokeWidth)} />
+      <Polyline points="1 20 1 14 7 14" {...strokeProps(color, strokeWidth)} />
+      <Path
+        d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+        {...strokeProps(color, strokeWidth)}
+      />
+    </Svg>
+  );
+}
