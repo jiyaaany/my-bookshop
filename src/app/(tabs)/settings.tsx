@@ -13,6 +13,7 @@ import {
 import { Screen } from '@/components/ui/screen';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { Radii, Spacing } from '@/constants/theme';
+import { useAuth } from '@/features/auth/use-auth';
 import { SORT_CYCLE, SORT_LABEL } from '@/features/library/use-library';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 import { setPreferences, setYearlyGoal, usePreferences } from '@/lib/store/bookshop-store';
@@ -23,12 +24,28 @@ export default function SettingsScreen() {
   const theme = useTheme();
   const scheme = useScheme();
   const prefs = usePreferences();
+  const { session, signInWithGoogle, signOut } = useAuth();
   const [goalOpen, setGoalOpen] = useState(false);
 
   const cycleSort = () =>
     setPreferences({ defaultSort: SORT_CYCLE[(SORT_CYCLE.indexOf(prefs.defaultSort) + 1) % SORT_CYCLE.length] });
 
   const soon = () => Alert.alert('준비 중', '이 기능은 곧 제공돼요.');
+
+  const meta = session?.user.user_metadata as { full_name?: string; name?: string } | undefined;
+  const displayName = session ? meta?.full_name ?? meta?.name ?? '내 책방' : '게스트';
+  const email = session?.user.email ?? '로그인하면 기기 간 동기화돼요';
+  const initial = displayName.slice(0, 1);
+
+  const onLogin = async () => {
+    const r = await signInWithGoogle();
+    if (!r.ok && r.error) Alert.alert('로그인', r.error);
+  };
+  const onLogout = () =>
+    Alert.alert('로그아웃할까요?', undefined, [
+      { text: '취소', style: 'cancel' },
+      { text: '로그아웃', style: 'destructive', onPress: () => void signOut() },
+    ]);
 
   return (
     <Screen>
@@ -37,15 +54,26 @@ export default function SettingsScreen() {
         {/* Profile */}
         <View style={[styles.profile, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-            <Text style={styles.avatarText}>책</Text>
+            <Text style={styles.avatarText}>{initial}</Text>
           </View>
           <View style={styles.profileMeta}>
-            <Text style={[styles.profileName, { color: theme.heading }]}>내 책방</Text>
-            <Text style={[styles.profileEmail, { color: theme.textSecondary }]}>로그인하면 기기 간 동기화돼요</Text>
+            <Text style={[styles.profileName, { color: theme.heading }]}>{displayName}</Text>
+            <Text style={[styles.profileEmail, { color: theme.textSecondary }]} numberOfLines={1}>
+              {email}
+            </Text>
           </View>
-          <View style={[styles.syncBadge, { backgroundColor: theme.surfaceMuted }]}>
-            <Text style={[styles.syncText, { color: theme.textSecondary }]}>로컬 저장</Text>
-          </View>
+          {session ? (
+            <View style={[styles.syncBadge, { backgroundColor: theme.successBg }]}>
+              <View style={[styles.syncDot, { backgroundColor: theme.success }]} />
+              <Text style={[styles.syncText, { color: theme.success }]}>동기화됨</Text>
+            </View>
+          ) : (
+            <Pressable
+              onPress={onLogin}
+              style={({ pressed }) => [styles.loginBtn, { backgroundColor: theme.primary }, pressed && styles.pressed]}>
+              <Text style={[styles.loginText, { color: theme.onPrimary }]}>Google 로그인</Text>
+            </Pressable>
+          )}
         </View>
 
         {/* 독서 */}
@@ -112,10 +140,12 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        <Pressable onPress={soon} style={styles.logout} accessibilityRole="button">
-          <LogOutIcon size={18} color={theme.destructive} />
-          <Text style={[styles.logoutText, { color: theme.destructive }]}>로그아웃</Text>
-        </Pressable>
+        {session ? (
+          <Pressable onPress={onLogout} style={styles.logout} accessibilityRole="button">
+            <LogOutIcon size={18} color={theme.destructive} />
+            <Text style={[styles.logoutText, { color: theme.destructive }]}>로그아웃</Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
 
       <GoalSheet
@@ -247,8 +277,11 @@ const styles = StyleSheet.create({
   profileMeta: { flex: 1 },
   profileName: { fontSize: 16, fontWeight: '700' },
   profileEmail: { fontSize: 12.5, marginTop: 2 },
-  syncBadge: { paddingHorizontal: 11, paddingVertical: 6, borderRadius: Radii.full },
+  syncBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 6, borderRadius: Radii.full },
+  syncDot: { width: 6, height: 6, borderRadius: 3 },
   syncText: { fontSize: 12, fontWeight: '600' },
+  loginBtn: { paddingHorizontal: 13, paddingVertical: 8, borderRadius: Radii.full },
+  loginText: { fontSize: 12.5, fontWeight: '700' },
 
   section: { marginBottom: 18 },
   sectionLabel: { fontSize: 12, fontWeight: '600', paddingHorizontal: PAD + 2, marginBottom: 8 },

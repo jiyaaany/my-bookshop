@@ -45,6 +45,8 @@ export function getSupabase(): SupabaseClient | null {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
+      // PKCE for the mobile browser OAuth flow (exchangeCodeForSession).
+      flowType: 'pkce',
     },
   });
   return client;
