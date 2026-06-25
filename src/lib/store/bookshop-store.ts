@@ -161,6 +161,40 @@ export function addBook(input: NewBookInput): string {
   return id;
 }
 
+export type BookEdit = Partial<
+  Pick<
+    Book,
+    | 'title'
+    | 'author'
+    | 'publisher'
+    | 'pageCount'
+    | 'isbn'
+    | 'coverImageUrl'
+    | 'readingStatus'
+    | 'rating'
+    | 'memo'
+    | 'tagIds'
+    | 'purchasedDate'
+    | 'startedDate'
+    | 'finishedDate'
+  >
+>;
+
+export function updateBook(id: string, patch: BookEdit) {
+  let updated: Book | undefined;
+  bookshopStore.setState((s) => ({
+    books: s.books.map((b) => {
+      if (b.id !== id) return b;
+      const next: Book = { ...b, ...patch, updatedAt: nowIso() };
+      if (next.readingStatus === 'READING' && !next.startedDate) next.startedDate = nowIso();
+      if (next.readingStatus === 'DONE' && !next.finishedDate) next.finishedDate = nowIso();
+      updated = next;
+      return next;
+    }),
+  }));
+  if (updated) persistUpsertBook(updated);
+}
+
 /** Find tags by name (case-insensitive) or create them; returns their ids. */
 export function ensureTags(names: string[]): string[] {
   const ids: string[] = [];
