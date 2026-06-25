@@ -8,6 +8,8 @@
  *   - src/lib/sync/index.ts      (cloud sync contract)
  */
 
+import { useMemo } from 'react';
+
 import { createStore, useStore } from '@/lib/store/create-store';
 import {
   persistDeleteBook,
@@ -250,13 +252,24 @@ export const useStatus = () => useStore(bookshopStore, (s) => s.status);
 
 export const useBook = (id: string | undefined) =>
   useStore(bookshopStore, (s) => s.books.find((b) => b.id === id));
-export const useQuotesFor = (bookId: string | undefined) =>
-  useStore(bookshopStore, (s) => s.quotes.filter((q) => q.bookId === bookId));
-export const useRecordsFor = (bookId: string | undefined) =>
-  useStore(bookshopStore, (s) => s.records.filter((r) => r.bookId === bookId));
-export const useTagsByIds = (ids: string[]) =>
-  useStore(bookshopStore, (s) => s.tags.filter((t) => ids.includes(t.id)));
 export const useQuote = (id: string | undefined) =>
   useStore(bookshopStore, (s) => s.quotes.find((q) => q.id === id));
 export const useRecord = (id: string | undefined) =>
   useStore(bookshopStore, (s) => s.records.find((r) => r.id === id));
+
+// NOTE: filter/map inside a useSyncExternalStore selector returns a new array
+// every render → infinite loop. Select the stable source array, then derive
+// with useMemo.
+export const useQuotesFor = (bookId: string | undefined) => {
+  const quotes = useQuotes();
+  return useMemo(() => quotes.filter((q) => q.bookId === bookId), [quotes, bookId]);
+};
+export const useRecordsFor = (bookId: string | undefined) => {
+  const records = useRecords();
+  return useMemo(() => records.filter((r) => r.bookId === bookId), [records, bookId]);
+};
+export const useTagsByIds = (ids: string[]) => {
+  const tags = useTags();
+  const key = ids.join('|');
+  return useMemo(() => tags.filter((t) => ids.includes(t.id)), [tags, key]); // eslint-disable-line react-hooks/exhaustive-deps
+};
