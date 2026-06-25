@@ -26,6 +26,18 @@
     "plugins": [
       "expo-router",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "책 바코드(ISBN)를 스캔해 표지와 정보를 자동으로 채우기 위해 카메라를 사용합니다."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "기록에 첨부할 사진을 선택하기 위해 사진 접근이 필요합니다."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#208AEF",
