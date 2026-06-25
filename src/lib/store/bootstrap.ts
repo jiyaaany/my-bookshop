@@ -8,7 +8,7 @@
 
 import { getSupabase } from '@/lib/supabase/client';
 import { getSupabaseRepository } from '@/lib/supabase/repository';
-import { bookshopStore, hydrate, setStatus } from '@/lib/store/bookshop-store';
+import { bookshopStore, hydrate, setError, setStatus } from '@/lib/store/bookshop-store';
 
 export async function bootstrapBookshop(): Promise<void> {
   const repo = getSupabaseRepository();
@@ -23,9 +23,16 @@ export async function bootstrapBookshop(): Promise<void> {
     const snapshot = await repo.load();
     hydrate(snapshot);
   } catch (err) {
-    if (__DEV__) console.warn('[bootstrap] cloud hydrate failed, staying local:', err);
-    setStatus('ready');
+    // Signed in but the cloud snapshot failed to load — surface it instead of
+    // silently showing the stale local cache as if it were the user's data.
+    if (__DEV__) console.warn('[bootstrap] cloud hydrate failed:', err);
+    setError('책장을 불러오지 못했어요. 네트워크 상태를 확인해 주세요.');
   }
+}
+
+/** Retry the cloud hydrate after an error (wired to the error-state CTA). */
+export async function retryBootstrap(): Promise<void> {
+  await bootstrapBookshop();
 }
 
 /** Re-hydrate whenever the auth session changes (login). Returns an unsubscribe. */

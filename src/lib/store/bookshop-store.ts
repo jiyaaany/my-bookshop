@@ -40,8 +40,10 @@ export interface BookshopState {
   records: ReadingRecord[];
   tags: Tag[];
   preferences: Preferences;
-  /** Hydration/sync status for loading & empty states. */
-  status: 'idle' | 'loading' | 'ready';
+  /** Hydration/sync status for loading, empty & error states. */
+  status: 'idle' | 'loading' | 'ready' | 'error';
+  /** Human-readable reason when status === 'error' (cloud load/network failure). */
+  error: string | null;
 }
 
 const initialState: BookshopState = {
@@ -51,6 +53,7 @@ const initialState: BookshopState = {
   tags: SEED_TAGS,
   preferences: { yearlyGoal: 30, defaultSort: 'recent', theme: 'system' },
   status: 'ready',
+  error: null,
 };
 
 export const bookshopStore = createStore<BookshopState>(initialState);
@@ -75,7 +78,13 @@ const nowIso = () => new Date().toISOString();
 // ── Preferences ─────────────────────────────────────────────────
 
 export function setStatus(status: BookshopState['status']) {
-  bookshopStore.setState({ status });
+  // Leaving the error state clears the stored reason.
+  bookshopStore.setState(status === 'error' ? { status } : { status, error: null });
+}
+
+/** Move the store into the error state with a reason (cloud load/network failure). */
+export function setError(message: string) {
+  bookshopStore.setState({ status: 'error', error: message });
 }
 
 /** Replace the cached collections (used after a cloud hydrate). */
@@ -91,6 +100,7 @@ export function hydrate(snapshot: {
     records: snapshot.records,
     tags: snapshot.tags,
     status: 'ready',
+    error: null,
   });
 }
 
@@ -308,6 +318,7 @@ export const useRecords = () => useStore(bookshopStore, (s) => s.records);
 export const useTags = () => useStore(bookshopStore, (s) => s.tags);
 export const usePreferences = () => useStore(bookshopStore, (s) => s.preferences);
 export const useStatus = () => useStore(bookshopStore, (s) => s.status);
+export const useStoreError = () => useStore(bookshopStore, (s) => s.error);
 
 export const useBook = (id: string | undefined) =>
   useStore(bookshopStore, (s) => s.books.find((b) => b.id === id));
