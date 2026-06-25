@@ -9,6 +9,15 @@
  */
 
 import { createStore, useStore } from '@/lib/store/create-store';
+import {
+  persistDeleteBook,
+  persistDeleteQuote,
+  persistDeleteRecord,
+  persistUpsertBook,
+  persistUpsertQuote,
+  persistUpsertRecord,
+  persistUpsertTag,
+} from '@/lib/store/persist';
 import { SEED, SEED_TAGS } from '@/lib/db/seed';
 import type { Book, Quote, ReadingRecord, Tag } from '@/types/models';
 
@@ -45,11 +54,17 @@ export const bookshopStore = createStore<BookshopState>(initialState);
 
 // ── Helpers ─────────────────────────────────────────────────────
 
-let idCounter = 0;
-/** Local id for optimistic creates (replaced by server uuid on sync). */
-export function newId(prefix: string): string {
-  idCounter += 1;
-  return `${prefix}-${Date.now().toString(36)}-${idCounter}`;
+/**
+ * Client-generated UUID for new entities, so local and Supabase rows share the
+ * same id (the `*.id` columns are `uuid`). The prefix arg is ignored — kept for
+ * call-site readability. (Swap for a crypto-strong source when available.)
+ */
+export function newId(_prefix?: string): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 const nowIso = () => new Date().toISOString();
@@ -87,15 +102,18 @@ export function setYearlyGoal(goal: number) {
 // ── Book actions ────────────────────────────────────────────────
 
 export function setBookStatus(id: string, status: BookshopState['books'][number]['readingStatus']) {
+  let updated: Book | undefined;
   bookshopStore.setState((s) => ({
     books: s.books.map((b) => {
       if (b.id !== id) return b;
       const patch: Partial<Book> = { readingStatus: status, updatedAt: nowIso() };
       if (status === 'READING' && !b.startedDate) patch.startedDate = nowIso();
       if (status === 'DONE' && !b.finishedDate) patch.finishedDate = nowIso();
-      return { ...b, ...patch };
+      updated = { ...b, ...patch };
+      return updated;
     }),
   }));
+  if (updated) persistUpsertBook(updated);
 }
 
 export function deleteBook(id: string) {
@@ -104,6 +122,7 @@ export function deleteBook(id: string) {
     quotes: s.quotes.filter((q) => q.bookId !== id),
     records: s.records.filter((r) => r.bookId !== id),
   }));
+  persistDeleteBook(id); // quotes/records cascade server-side
 }
 
 export interface NewBookInput {
@@ -136,12 +155,14 @@ export function addBook(input: NewBookInput): string {
     updatedAt: at,
   };
   bookshopStore.setState((s) => ({ books: [book, ...s.books] }));
+  persistUpsertBook(book);
   return id;
 }
 
 /** Find tags by name (case-insensitive) or create them; returns their ids. */
 export function ensureTags(names: string[]): string[] {
   const ids: string[] = [];
+  const created: Tag[] = [];
   bookshopStore.setState((s) => {
     const tags = [...s.tags];
     for (const raw of names) {
@@ -151,13 +172,15 @@ export function ensureTags(names: string[]): string[] {
       if (existing) {
         ids.push(existing.id);
       } else {
-        const tag = { id: newId('tag'), name };
+        const tag: Tag = { id: newId('tag'), name };
         tags.push(tag);
+        created.push(tag);
         ids.push(tag.id);
       }
     }
     return { tags };
   });
+  created.forEach(persistUpsertTag);
   return ids;
 }
 
@@ -167,21 +190,25 @@ export function addQuote(bookId: string, text: string, pageNumber?: number): str
   const id = newId('quote');
   const quote: Quote = { id, bookId, text: text.trim(), pageNumber, createdAt: nowIso() };
   bookshopStore.setState((s) => ({ quotes: [quote, ...s.quotes] }));
+  persistUpsertQuote(quote);
   return id;
 }
 
 export function updateQuote(id: string, patch: { text?: string; pageNumber?: number }) {
+  let updated: Quote | undefined;
   bookshopStore.setState((s) => ({
-    quotes: s.quotes.map((q) =>
-      q.id === id
-        ? { ...q, ...patch, text: patch.text != null ? patch.text.trim() : q.text }
-        : q,
-    ),
+    quotes: s.quotes.map((q) => {
+      if (q.id !== id) return q;
+      updated = { ...q, ...patch, text: patch.text != null ? patch.text.trim() : q.text };
+      return updated;
+    }),
   }));
+  if (updated) persistUpsertQuote(updated);
 }
 
 export function deleteQuote(id: string) {
   bookshopStore.setState((s) => ({ quotes: s.quotes.filter((q) => q.id !== id) }));
+  persistDeleteQuote(id);
 }
 
 // ── Record actions ──────────────────────────────────────────────
@@ -191,17 +218,25 @@ export function addRecord(bookId: string, title: string, body: string): string {
   const at = nowIso();
   const record: ReadingRecord = { id, bookId, title: title.trim(), body, createdAt: at, updatedAt: at };
   bookshopStore.setState((s) => ({ records: [record, ...s.records] }));
+  persistUpsertRecord(record);
   return id;
 }
 
 export function updateRecord(id: string, patch: { title?: string; body?: string }) {
+  let updated: ReadingRecord | undefined;
   bookshopStore.setState((s) => ({
-    records: s.records.map((r) => (r.id === id ? { ...r, ...patch, updatedAt: nowIso() } : r)),
+    records: s.records.map((r) => {
+      if (r.id !== id) return r;
+      updated = { ...r, ...patch, updatedAt: nowIso() };
+      return updated;
+    }),
   }));
+  if (updated) persistUpsertRecord(updated);
 }
 
 export function deleteRecord(id: string) {
   bookshopStore.setState((s) => ({ records: s.records.filter((r) => r.id !== id) }));
+  persistDeleteRecord(id);
 }
 
 // ── Hooks ───────────────────────────────────────────────────────
