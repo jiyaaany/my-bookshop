@@ -24,11 +24,18 @@
   supabase db push        # 또는: supabase db execute -f supabase/schema.sql
   ```
 
-### 2) 인증 Provider (Apple / Google)
-- Dashboard → Authentication → Providers → **Apple**, **Google** 활성화
-  - Google: GCP OAuth Client ID/Secret + redirect `https://ueiaawyncnxogpyxsiqs.supabase.co/auth/v1/callback`
-  - Apple: Apple Developer Service ID/Key
-- (앱 로그인 코드는 다음 브랜치에서 `expo-apple-authentication`/`expo-auth-session` + `signInWithIdToken`로 연결 예정)
+### 2) 인증 Provider — Google (구현됨)
+앱 코드는 `claude/auth-google`에 구현됨(브라우저 OAuth + PKCE). 콘솔만 설정하면 동작:
+1. **Google Cloud Console** → OAuth consent screen(External, scopes: email/profile/openid, test users 추가)
+2. Credentials → **OAuth client ID → Web application** 생성, Authorized redirect URI:
+   `https://ueiaawyncnxogpyxsiqs.supabase.co/auth/v1/callback`
+3. Supabase → Auth → Providers → **Google** 활성화 → Web **Client ID/Secret** 입력
+4. Supabase → Auth → **URL Configuration → Redirect URLs**에 `mybookshop://auth-callback` 추가
+- 앱엔 Google client id를 넣지 않음(Supabase가 핸드셰이크 처리). 네이티브 플로우가 필요하면 추후 `@react-native-google-signin` + `signInWithIdToken`로 교체 가능.
+
+### 2-b) Apple (나중에)
+- Apple Developer Program 필요. App ID + Services ID + Key(.p8) → client secret JWT 생성 → Supabase Apple provider.
+- 앱: `expo-apple-authentication` 네이티브 → `signInWithIdToken`. (Client IDs = 번들 ID)
 
 ### 3) ISBN 엣지 함수 + 키
 ```bash
