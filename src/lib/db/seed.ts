@@ -45,13 +45,14 @@ const TITLES: [string, string][] = [
   ['책 읽는 삶', '찰스 반 도렌'],
 ];
 
-const COVER_GRADIENTS = [
-  '#7A5638',
-  '#516D7C',
-  '#26384A',
-  '#B5602F',
-  '#A07C33',
-  '#6E5546',
+/** Two-stop cover gradients (from the 책장 mock) for books without artwork. */
+const COVER_GRADIENTS: [string, string][] = [
+  ['#7A5638', '#5A3E2A'],
+  ['#516D7C', '#3A5260'],
+  ['#26384A', '#141F2B'],
+  ['#B5602F', '#8E4622'],
+  ['#A07C33', '#7E5F22'],
+  ['#6E5546', '#4B3A2E'],
 ];
 
 /** Completed books per month (Jan→Dec); sum = 18 (matches the goal-card mock). */
@@ -156,8 +157,7 @@ function buildSeed(): { books: Book[]; quotes: Quote[]; records: ReadingRecord[]
 export function coverColorsFor(id: string): [string, string] {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  const base = COVER_GRADIENTS[hash % COVER_GRADIENTS.length];
-  return [base, base];
+  return COVER_GRADIENTS[hash % COVER_GRADIENTS.length];
 }
 
 export const SEED = buildSeed();

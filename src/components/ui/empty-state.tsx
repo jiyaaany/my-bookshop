@@ -8,7 +8,7 @@ interface EmptyStateProps {
   icon: ReactNode;
   title: string;
   description: string;
-  action?: { label: string; onPress?: () => void };
+  action?: { label: string; onPress?: () => void; icon?: ReactNode };
   /** 'solid' = filled brown CTA; 'soft' = tinted pill (matches the two mocks). */
   actionVariant?: 'solid' | 'soft';
 }
@@ -36,6 +36,7 @@ export function EmptyState({
               : { backgroundColor: theme.surfaceMuted },
             pressed && styles.pressed,
           ]}>
+          {action.icon}
           <Text
             style={[
               styles.actionLabel,
@@ -78,6 +79,9 @@ const styles = StyleSheet.create({
   },
   action: {
     marginTop: Spacing.six,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
     paddingHorizontal: 22,
     paddingVertical: Spacing.three,
     borderRadius: Radii.md,
