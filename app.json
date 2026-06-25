@@ -8,14 +8,18 @@
     "scheme": "mybookshop",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/icon.png"
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "com.anonymous.my-bookshop"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FAF5EF",
         "foregroundImage": "./assets/images/icon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "output": "static",
@@ -26,7 +30,9 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "책 바코드(ISBN)를 스캔해 표지와 정보를 자동으로 채우기 위해 카메라를 사용합니다."
+          "cameraPermission": "책 바코드(ISBN)를 스캔해 표지와 정보를 자동으로 채우기 위해 카메라를 사용합니다.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       [
