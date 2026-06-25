@@ -12,6 +12,10 @@
  * function (supabase/functions/book-lookup). See .env.example.
  */
 
+// URL/structuredClone polyfills required by supabase-js on React Native.
+import 'react-native-url-polyfill/auto';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -36,7 +40,8 @@ export function getSupabase(): SupabaseClient | null {
   }
   client = createClient(url, anonKey, {
     auth: {
-      // React Native: persist session in storage; no URL session detection.
+      // React Native: persist session in AsyncStorage; no URL session detection.
+      storage: AsyncStorage,
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
