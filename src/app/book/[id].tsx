@@ -55,6 +55,7 @@ export default function BookDetailScreen() {
   const onMore = () => {
     Alert.alert(book.title, undefined, [
       { text: '취소', style: 'cancel' },
+      { text: '편집', onPress: () => router.push(`/book/edit?id=${book.id}`) },
       {
         text: '삭제',
         style: 'destructive',
