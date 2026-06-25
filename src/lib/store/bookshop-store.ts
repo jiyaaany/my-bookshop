@@ -56,6 +56,26 @@ const nowIso = () => new Date().toISOString();
 
 // ── Preferences ─────────────────────────────────────────────────
 
+export function setStatus(status: BookshopState['status']) {
+  bookshopStore.setState({ status });
+}
+
+/** Replace the cached collections (used after a cloud hydrate). */
+export function hydrate(snapshot: {
+  books: Book[];
+  quotes: Quote[];
+  records: ReadingRecord[];
+  tags: Tag[];
+}) {
+  bookshopStore.setState({
+    books: snapshot.books,
+    quotes: snapshot.quotes,
+    records: snapshot.records,
+    tags: snapshot.tags,
+    status: 'ready',
+  });
+}
+
 export function setPreferences(patch: Partial<Preferences>) {
   bookshopStore.setState((s) => ({ preferences: { ...s.preferences, ...patch } }));
 }
