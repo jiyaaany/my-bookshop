@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { MoreVerticalIcon, QuoteIcon, PencilIcon } from '@/components/icons';
 import { BookCover } from '@/components/ui/book-cover';
 import { NavHeader } from '@/components/ui/nav-header';
+import { RemoteImage } from '@/components/ui/remote-image';
 import { Screen } from '@/components/ui/screen';
 import { StarRating } from '@/components/ui/star-rating';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -265,20 +266,35 @@ function QuoteCard({ quote, onPress }: { quote: Quote; onPress: () => void }) {
 
 function RecordCard({ record, onPress }: { record: ReadingRecord; onPress: () => void }) {
   const theme = useTheme();
+  const thumb = record.imageUrls?.[0];
+  const extra = (record.imageUrls?.length ?? 0) - 1;
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        styles.recordCard,
         { backgroundColor: theme.surface, borderColor: theme.border },
         pressed && styles.pressed,
       ]}>
-      <Text style={[styles.recordTitle, { color: theme.heading }]} numberOfLines={1}>
-        {record.title}
-      </Text>
-      <Text style={[styles.recordBody, { color: theme.textSecondary }]} numberOfLines={2}>
-        {record.body}
-      </Text>
+      <View style={styles.recordText}>
+        <Text style={[styles.recordTitle, { color: theme.heading }]} numberOfLines={1}>
+          {record.title}
+        </Text>
+        <Text style={[styles.recordBody, { color: theme.textSecondary }]} numberOfLines={2}>
+          {record.body}
+        </Text>
+      </View>
+      {thumb ? (
+        <View style={styles.thumbWrap}>
+          <RemoteImage path={thumb} style={styles.thumb} contentFit="cover" />
+          {extra > 0 ? (
+            <View style={styles.thumbBadge}>
+              <Text style={styles.thumbBadgeText}>+{extra}</Text>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -325,8 +341,22 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.9 },
   quoteText: { fontSize: 13.5, lineHeight: 23 },
   quotePage: { fontSize: 11, marginTop: 8 },
+  recordCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  recordText: { flex: 1 },
   recordTitle: { fontSize: 14.5, fontWeight: '700', marginBottom: 6 },
   recordBody: { fontSize: 12.5, lineHeight: 20 },
+  thumbWrap: { width: 56, height: 56 },
+  thumb: { width: 56, height: 56, borderRadius: Radii.sm },
+  thumbBadge: {
+    position: 'absolute',
+    right: 3,
+    bottom: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: Radii.full,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  thumbBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
 
   emptyBox: {
     marginHorizontal: PAD,

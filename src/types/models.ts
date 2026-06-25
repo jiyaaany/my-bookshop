@@ -53,6 +53,12 @@ export interface ReadingRecord {
   title: string;
   /** Rich text / markdown; may embed image references. */
   body: string;
+  /**
+   * Attached images. Each entry is either a Supabase Storage path
+   * (`{user_id}/{record_id}/{uuid}.jpg`, resolved to a signed URL for display)
+   * or, in local-only mode, a `file://` device URI. See lib/supabase/storage.
+   */
+  imageUrls?: string[];
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }

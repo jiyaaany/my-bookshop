@@ -63,9 +63,13 @@ create table if not exists public.records (
   book_id    uuid not null references public.books (id) on delete cascade,
   title      text not null,
   body       text not null default '',
+  image_urls text[] not null default '{}',  -- record-images storage paths (#05)
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Idempotent column add for DBs created before #05 (re-run `supabase db push`).
+alter table public.records
+  add column if not exists image_urls text[] not null default '{}';
 
 -- ── indexes ─────────────────────────────────────────────────────
 create index if not exists books_user_idx        on public.books (user_id);
