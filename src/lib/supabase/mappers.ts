@@ -37,6 +37,7 @@ export interface RecordRow {
   book_id: string;
   title: string;
   body: string;
+  image_urls: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -111,6 +112,7 @@ export const recordFromRow = (r: RecordRow): ReadingRecord => ({
   bookId: r.book_id,
   title: r.title,
   body: r.body,
+  imageUrls: r.image_urls ?? undefined,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -121,6 +123,7 @@ export const recordToRow = (r: ReadingRecord, userId: string) => ({
   book_id: r.bookId,
   title: r.title,
   body: r.body,
+  image_urls: r.imageUrls ?? [],
   created_at: r.createdAt,
   updated_at: r.updatedAt,
 });

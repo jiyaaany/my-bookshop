@@ -21,6 +21,7 @@ import {
   persistUpsertTag,
 } from '@/lib/store/persist';
 import { SEED, SEED_TAGS } from '@/lib/db/seed';
+import { deleteRecordImages } from '@/lib/supabase/storage';
 import type { Book, Quote, ReadingRecord, Tag } from '@/types/models';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -249,30 +250,54 @@ export function deleteQuote(id: string) {
 
 // ── Record actions ──────────────────────────────────────────────
 
-export function addRecord(bookId: string, title: string, body: string): string {
+export function addRecord(bookId: string, title: string, body: string, imageUrls?: string[]): string {
   const id = newId('record');
   const at = nowIso();
-  const record: ReadingRecord = { id, bookId, title: title.trim(), body, createdAt: at, updatedAt: at };
+  const record: ReadingRecord = {
+    id,
+    bookId,
+    title: title.trim(),
+    body,
+    imageUrls: imageUrls?.length ? imageUrls : undefined,
+    createdAt: at,
+    updatedAt: at,
+  };
   bookshopStore.setState((s) => ({ records: [record, ...s.records] }));
   persistUpsertRecord(record);
   return id;
 }
 
-export function updateRecord(id: string, patch: { title?: string; body?: string }) {
+export function updateRecord(id: string, patch: { title?: string; body?: string; imageUrls?: string[] }) {
   let updated: ReadingRecord | undefined;
+  let removedImages: string[] = [];
   bookshopStore.setState((s) => ({
     records: s.records.map((r) => {
       if (r.id !== id) return r;
-      updated = { ...r, ...patch, updatedAt: nowIso() };
+      if (patch.imageUrls) {
+        const next = new Set(patch.imageUrls);
+        removedImages = (r.imageUrls ?? []).filter((u) => !next.has(u));
+      }
+      updated = {
+        ...r,
+        ...patch,
+        imageUrls: patch.imageUrls ? (patch.imageUrls.length ? patch.imageUrls : undefined) : r.imageUrls,
+        updatedAt: nowIso(),
+      };
       return updated;
     }),
   }));
   if (updated) persistUpsertRecord(updated);
+  if (removedImages.length) void deleteRecordImages(removedImages).catch(() => {});
 }
 
 export function deleteRecord(id: string) {
-  bookshopStore.setState((s) => ({ records: s.records.filter((r) => r.id !== id) }));
+  let removed: ReadingRecord | undefined;
+  bookshopStore.setState((s) => {
+    removed = s.records.find((r) => r.id === id);
+    return { records: s.records.filter((r) => r.id !== id) };
+  });
   persistDeleteRecord(id);
+  if (removed?.imageUrls?.length) void deleteRecordImages(removed.imageUrls).catch(() => {});
 }
 
 // ── Hooks ───────────────────────────────────────────────────────
