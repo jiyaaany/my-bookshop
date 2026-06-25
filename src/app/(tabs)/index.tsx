@@ -10,14 +10,8 @@ import { Screen } from '@/components/ui/screen';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TagChip } from '@/components/ui/tag-chip';
 import { Spacing, Type } from '@/constants/theme';
-import {
-  SORT_CYCLE,
-  SORT_LABEL,
-  STATUS_FILTERS,
-  useLibrary,
-  type SortOrder,
-} from '@/features/library/use-library';
-import { useStatus } from '@/lib/store/bookshop-store';
+import { SORT_CYCLE, SORT_LABEL, STATUS_FILTERS, useLibrary } from '@/features/library/use-library';
+import { setPreferences, usePreferences, useStatus } from '@/lib/store/bookshop-store';
 import { useTheme } from '@/hooks/use-theme';
 import { STATUS_FILTER_LABEL, type Book, type StatusFilter } from '@/types/models';
 
@@ -27,12 +21,14 @@ export default function LibraryScreen() {
   const theme = useTheme();
   const status = useStatus();
   const [filter, setFilter] = useState<StatusFilter>('ALL');
-  const [sort, setSort] = useState<SortOrder>('recent');
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
-  const { books, total, counts } = useLibrary(filter, sort, searching ? query : '');
+  // Sort is driven by the saved preference (설정 → 기본 정렬), so the two stay in sync.
+  const { defaultSort } = usePreferences();
+  const { books, total, counts } = useLibrary(filter, defaultSort, searching ? query : '');
 
-  const cycleSort = () => setSort((s) => SORT_CYCLE[(SORT_CYCLE.indexOf(s) + 1) % SORT_CYCLE.length]);
+  const cycleSort = () =>
+    setPreferences({ defaultSort: SORT_CYCLE[(SORT_CYCLE.indexOf(defaultSort) + 1) % SORT_CYCLE.length] });
 
   const openBook = (book: Book) => router.push(`/book/${book.id}`);
   const addBook = () => router.push('/book/new');
@@ -87,7 +83,7 @@ export default function LibraryScreen() {
                   권
                 </Text>
                 <Pressable onPress={cycleSort} style={styles.sortBtn} accessibilityRole="button">
-                  <Text style={[styles.sortText, { color: theme.primary }]}>{SORT_LABEL[sort]}</Text>
+                  <Text style={[styles.sortText, { color: theme.primary }]}>{SORT_LABEL[defaultSort]}</Text>
                   <ChevronDownIcon size={14} color={theme.primary} />
                 </Pressable>
               </View>
