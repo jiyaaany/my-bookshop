@@ -43,7 +43,18 @@ const initialState: BookshopState = {
 
 export const bookshopStore = createStore<BookshopState>(initialState);
 
-// ── Actions ─────────────────────────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────────────
+
+let idCounter = 0;
+/** Local id for optimistic creates (replaced by server uuid on sync). */
+export function newId(prefix: string): string {
+  idCounter += 1;
+  return `${prefix}-${Date.now().toString(36)}-${idCounter}`;
+}
+
+const nowIso = () => new Date().toISOString();
+
+// ── Preferences ─────────────────────────────────────────────────
 
 export function setPreferences(patch: Partial<Preferences>) {
   bookshopStore.setState((s) => ({ preferences: { ...s.preferences, ...patch } }));
@@ -51,6 +62,28 @@ export function setPreferences(patch: Partial<Preferences>) {
 
 export function setYearlyGoal(goal: number) {
   setPreferences({ yearlyGoal: Math.max(1, Math.round(goal)) });
+}
+
+// ── Book actions ────────────────────────────────────────────────
+
+export function setBookStatus(id: string, status: BookshopState['books'][number]['readingStatus']) {
+  bookshopStore.setState((s) => ({
+    books: s.books.map((b) => {
+      if (b.id !== id) return b;
+      const patch: Partial<Book> = { readingStatus: status, updatedAt: nowIso() };
+      if (status === 'READING' && !b.startedDate) patch.startedDate = nowIso();
+      if (status === 'DONE' && !b.finishedDate) patch.finishedDate = nowIso();
+      return { ...b, ...patch };
+    }),
+  }));
+}
+
+export function deleteBook(id: string) {
+  bookshopStore.setState((s) => ({
+    books: s.books.filter((b) => b.id !== id),
+    quotes: s.quotes.filter((q) => q.bookId !== id),
+    records: s.records.filter((r) => r.bookId !== id),
+  }));
 }
 
 // ── Hooks ───────────────────────────────────────────────────────
@@ -61,3 +94,12 @@ export const useRecords = () => useStore(bookshopStore, (s) => s.records);
 export const useTags = () => useStore(bookshopStore, (s) => s.tags);
 export const usePreferences = () => useStore(bookshopStore, (s) => s.preferences);
 export const useStatus = () => useStore(bookshopStore, (s) => s.status);
+
+export const useBook = (id: string | undefined) =>
+  useStore(bookshopStore, (s) => s.books.find((b) => b.id === id));
+export const useQuotesFor = (bookId: string | undefined) =>
+  useStore(bookshopStore, (s) => s.quotes.filter((q) => q.bookId === bookId));
+export const useRecordsFor = (bookId: string | undefined) =>
+  useStore(bookshopStore, (s) => s.records.filter((r) => r.bookId === bookId));
+export const useTagsByIds = (ids: string[]) =>
+  useStore(bookshopStore, (s) => s.tags.filter((t) => ids.includes(t.id)));
