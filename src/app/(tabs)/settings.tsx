@@ -3,8 +3,6 @@ import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'rea
 
 import {
   ClockIcon,
-  CloudIcon,
-  DownloadIcon,
   LogOutIcon,
   SortIcon,
   SunIcon,
@@ -29,8 +27,6 @@ export default function SettingsScreen() {
 
   const cycleSort = () =>
     setPreferences({ defaultSort: SORT_CYCLE[(SORT_CYCLE.indexOf(prefs.defaultSort) + 1) % SORT_CYCLE.length] });
-
-  const soon = () => Alert.alert('준비 중', '이 기능은 곧 제공돼요.');
 
   const meta = session?.user.user_metadata as { full_name?: string; name?: string } | undefined;
   const displayName = session ? meta?.full_name ?? meta?.name ?? '내 책방' : '게스트';
@@ -120,23 +116,6 @@ export default function SettingsScreen() {
                 })}
               </View>
             }
-          />
-        </Section>
-
-        {/* 데이터 */}
-        <Section label="데이터">
-          <Row
-            icon={<CloudIcon size={20} color={theme.primary} />}
-            label="클라우드 백업"
-            value="로컬 전용"
-            onPress={soon}
-          />
-          <Row
-            icon={<DownloadIcon size={20} color={theme.primary} />}
-            label="데이터 내보내기"
-            value="CSV"
-            onPress={soon}
-            last
           />
         </Section>
 
