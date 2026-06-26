@@ -2,13 +2,13 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  Vibration,
   View,
 } from 'react-native';
 
@@ -52,6 +52,7 @@ export default function BookAddScreen() {
     if (isbn.length < 10) return;
     scannedRef.current = true;
     setLoading(true);
+    Vibration.vibrate(); // "잡혔다" 햅틱 — 인식 즉시 피드백
     const found = await lookupByIsbn(isbn);
     setLoading(false);
     if (found) {
@@ -270,18 +271,22 @@ export default function BookAddScreen() {
           />
         ) : null}
         <View style={styles.scanFrame}>
-          <View style={[styles.corner, styles.tl]} />
-          <View style={[styles.corner, styles.tr]} />
-          <View style={[styles.corner, styles.bl]} />
-          <View style={[styles.corner, styles.br]} />
+          <View style={[styles.corner, styles.tl, loading && styles.cornerActive]} />
+          <View style={[styles.corner, styles.tr, loading && styles.cornerActive]} />
+          <View style={[styles.corner, styles.bl, loading && styles.cornerActive]} />
+          <View style={[styles.corner, styles.br, loading && styles.cornerActive]} />
+          {loading ? (
+            <View style={styles.capturedBadge}>
+              <CheckIcon size={26} color="#16100C" strokeWidth={2.6} />
+            </View>
+          ) : null}
         </View>
-        {loading ? (
-          <View style={styles.scanLoading}>
-            <ActivityIndicator color="#E6B98C" />
-          </View>
-        ) : null}
-        <Text style={styles.scanHint}>책 뒤표지 바코드를 비춰 주세요</Text>
-        <Text style={styles.scanSub}>ISBN을 읽어 표지와 정보를 자동으로 채워요</Text>
+        <Text style={styles.scanHint}>
+          {loading ? '인식됐어요! 정보를 불러오는 중…' : '바코드를 프레임 안에 꽉 차게 비춰 주세요'}
+        </Text>
+        {loading ? null : (
+          <Text style={styles.scanSub}>ISBN을 읽어 표지와 정보를 자동으로 채워요</Text>
+        )}
       </View>
       <Pressable onPress={() => setMode('manual')} style={styles.manualLinkWrap}>
         <PencilIcon size={18} color="#E6B98C" />
@@ -380,13 +385,21 @@ const styles = StyleSheet.create({
   darkHeaderTitle: { color: '#fff', fontSize: 17, fontWeight: '700' },
 
   scanArea: { height: 520, backgroundColor: '#1B140E', justifyContent: 'center', alignItems: 'center' },
-  scanFrame: { width: 268, height: 172 },
+  scanFrame: { width: 268, height: 172, alignItems: 'center', justifyContent: 'center' },
   corner: { position: 'absolute', width: 34, height: 34, borderColor: '#E6B98C' },
+  cornerActive: { borderColor: '#86C795' },
   tl: { left: 0, top: 0, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 14 },
   tr: { right: 0, top: 0, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 14 },
   bl: { left: 0, bottom: 0, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 14 },
   br: { right: 0, bottom: 0, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 14 },
-  scanLoading: { position: 'absolute' },
+  capturedBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 999,
+    backgroundColor: '#86C795',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   scanHint: { position: 'absolute', bottom: 120, color: 'rgba(255,255,255,0.92)', fontSize: 15, fontWeight: '600' },
   scanSub: { position: 'absolute', bottom: 96, color: 'rgba(255,255,255,0.55)', fontSize: 12.5 },
 
