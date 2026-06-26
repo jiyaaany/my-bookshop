@@ -344,12 +344,11 @@ const styles = StyleSheet.create({
   formContent: { paddingHorizontal: 24, paddingTop: Spacing.two, paddingBottom: 120 },
 
   // found
-  foundContent: { paddingBottom: 120 },
+  foundContent: { paddingHorizontal: 22, paddingBottom: 120 },
   foundBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
-    marginHorizontal: 22,
     marginBottom: 14,
     paddingHorizontal: 14,
     paddingVertical: 9,
@@ -359,7 +358,6 @@ const styles = StyleSheet.create({
   resultCard: {
     flexDirection: 'row',
     gap: 16,
-    marginHorizontal: 22,
     marginBottom: 18,
     padding: 18,
     borderWidth: 1,
