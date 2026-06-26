@@ -121,7 +121,7 @@ function Header({ onSearch }: { onSearch: () => void }) {
   return (
     <View style={styles.header}>
       <View>
-        <Text style={[styles.eyebrow, { color: theme.eyebrow }]}>MY BOOKSHELF</Text>
+        <Text style={[styles.eyebrow, { color: theme.eyebrow }]}>MY BOOKSHOP</Text>
         <Text style={[styles.brand, { color: theme.heading }]}>번잡한 책방</Text>
       </View>
       <Pressable

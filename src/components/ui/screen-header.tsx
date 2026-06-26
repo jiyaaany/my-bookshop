@@ -4,7 +4,7 @@ import { Spacing, Type } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 interface ScreenHeaderProps {
-  /** Small uppercase label above the title (e.g. "2024", "MY BOOKSHELF"). */
+  /** Small uppercase label above the title (e.g. "2024", "MY BOOKSHOP"). */
   eyebrow?: string;
   title: string;
 }
