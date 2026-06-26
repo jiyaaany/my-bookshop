@@ -9,9 +9,10 @@ import { ErrorState } from '@/components/ui/error-state';
 import { Fab } from '@/components/ui/fab';
 import { Screen } from '@/components/ui/screen';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SortSheet } from '@/components/ui/sort-sheet';
 import { TagChip } from '@/components/ui/tag-chip';
 import { Spacing, Type } from '@/constants/theme';
-import { SORT_CYCLE, SORT_LABEL, STATUS_FILTERS, useLibrary } from '@/features/library/use-library';
+import { SORT_LABEL, STATUS_FILTERS, useLibrary } from '@/features/library/use-library';
 import { retryBootstrap } from '@/lib/store/bootstrap';
 import { setPreferences, usePreferences, useStatus, useStoreError } from '@/lib/store/bookshop-store';
 import { useTheme } from '@/hooks/use-theme';
@@ -26,12 +27,10 @@ export default function LibraryScreen() {
   const [filter, setFilter] = useState<StatusFilter>('ALL');
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
+  const [sortOpen, setSortOpen] = useState(false);
   // Sort is driven by the saved preference (설정 → 기본 정렬), so the two stay in sync.
   const { defaultSort } = usePreferences();
   const { books, total, counts } = useLibrary(filter, defaultSort, searching ? query : '');
-
-  const cycleSort = () =>
-    setPreferences({ defaultSort: SORT_CYCLE[(SORT_CYCLE.indexOf(defaultSort) + 1) % SORT_CYCLE.length] });
 
   const openBook = (book: Book) => router.push(`/book/${book.id}`);
   const addBook = () => router.push('/book/new');
@@ -92,7 +91,7 @@ export default function LibraryScreen() {
                   </Text>
                   권
                 </Text>
-                <Pressable onPress={cycleSort} style={styles.sortBtn} accessibilityRole="button">
+                <Pressable onPress={() => setSortOpen(true)} style={styles.sortBtn} accessibilityRole="button">
                   <Text style={[styles.sortText, { color: theme.primary }]}>{SORT_LABEL[defaultSort]}</Text>
                   <ChevronDownIcon size={14} color={theme.primary} />
                 </Pressable>
@@ -110,6 +109,16 @@ export default function LibraryScreen() {
       )}
 
       {!firstRun && !loading && !errored ? <Fab onPress={addBook} /> : null}
+
+      <SortSheet
+        visible={sortOpen}
+        value={defaultSort}
+        onSelect={(s) => {
+          setPreferences({ defaultSort: s });
+          setSortOpen(false);
+        }}
+        onClose={() => setSortOpen(false)}
+      />
     </Screen>
   );
 }

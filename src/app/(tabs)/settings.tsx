@@ -10,9 +10,10 @@ import {
 } from '@/components/icons';
 import { Screen } from '@/components/ui/screen';
 import { ScreenHeader } from '@/components/ui/screen-header';
+import { SortSheet } from '@/components/ui/sort-sheet';
 import { Radii, Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/use-auth';
-import { SORT_CYCLE, SORT_LABEL } from '@/features/library/use-library';
+import { SORT_LABEL } from '@/features/library/use-library';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 import { setPreferences, setYearlyGoal, usePreferences } from '@/lib/store/bookshop-store';
 
@@ -24,9 +25,7 @@ export default function SettingsScreen() {
   const prefs = usePreferences();
   const { session, signInWithGoogle, signOut } = useAuth();
   const [goalOpen, setGoalOpen] = useState(false);
-
-  const cycleSort = () =>
-    setPreferences({ defaultSort: SORT_CYCLE[(SORT_CYCLE.indexOf(prefs.defaultSort) + 1) % SORT_CYCLE.length] });
+  const [sortOpen, setSortOpen] = useState(false);
 
   const meta = session?.user.user_metadata as { full_name?: string; name?: string } | undefined;
   const displayName = session ? meta?.full_name ?? meta?.name ?? '내 책방' : '게스트';
@@ -84,7 +83,7 @@ export default function SettingsScreen() {
             icon={<SortIcon size={20} color={theme.primary} />}
             label="기본 정렬"
             value={SORT_LABEL[prefs.defaultSort]}
-            onPress={cycleSort}
+            onPress={() => setSortOpen(true)}
             last
           />
         </Section>
@@ -135,6 +134,16 @@ export default function SettingsScreen() {
           setYearlyGoal(g);
           setGoalOpen(false);
         }}
+      />
+
+      <SortSheet
+        visible={sortOpen}
+        value={prefs.defaultSort}
+        onSelect={(s) => {
+          setPreferences({ defaultSort: s });
+          setSortOpen(false);
+        }}
+        onClose={() => setSortOpen(false)}
       />
     </Screen>
   );
