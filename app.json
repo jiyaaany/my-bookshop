@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "번잡한 책방",
+    "name": "my-bookshop",
     "slug": "my-bookshop",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/icon.png",
-      "bundleIdentifier": "com.anonymous.my-bookshop"
+      "bundleIdentifier": "com.anonymous.my-bookshop",
+      "infoPlist": {
+        "CFBundleDisplayName": "번잡한 책방"
+      }
     },
     "android": {
       "adaptiveIcon": {
