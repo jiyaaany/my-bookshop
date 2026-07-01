@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BarChartBaseIcon } from '@/components/icons';
 import { DonutProgress } from '@/components/ui/donut-progress';
@@ -8,8 +9,11 @@ import { Screen } from '@/components/ui/screen';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { SectionCard } from '@/components/ui/section-card';
 import { Radii, Spacing } from '@/constants/theme';
+import { coverColorsFor } from '@/lib/db/seed';
+import { useBooks } from '@/lib/store/bookshop-store';
 import { useReadingStats, type ReadingStats } from '@/features/stats/use-reading-stats';
 import { useScheme, useTheme } from '@/hooks/use-theme';
+import type { Book } from '@/types/models';
 
 const SCREEN_PAD = 22;
 const CHART_HEIGHT = 96;
@@ -26,6 +30,7 @@ export default function StatsScreen() {
           <SummaryRow stats={stats} />
           <MonthlyCard stats={stats} />
           <GenreCard stats={stats} />
+          <BookStackCard />
         </ScrollView>
       ) : (
         <View style={styles.emptyFill}>
@@ -162,6 +167,70 @@ function GenreCard({ stats }: { stats: ReadingStats }) {
   );
 }
 
+// ── Stacked read books (책탑) ────────────────────────────────────
+// Completed books drawn as a physical pile, spine-out: each bar's thickness
+// comes from its page count and its color from the deterministic cover palette.
+
+const hashId = (id: string) => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+};
+
+/** Page count → spine thickness in px (clamped so thin/huge books stay sane). */
+const spineThickness = (pageCount?: number) =>
+  Math.round(Math.max(15, Math.min(46, 14 + (pageCount ?? 220) / 12)));
+
+function BookStackCard() {
+  const theme = useTheme();
+  const books = useBooks();
+  const done = useMemo(
+    () =>
+      books
+        .filter((b) => b.readingStatus === 'DONE')
+        // newest finished on top of the pile
+        .sort((a, b) => (b.finishedDate ?? b.createdAt).localeCompare(a.finishedDate ?? a.createdAt)),
+    [books],
+  );
+  if (done.length === 0) return null;
+  const totalPages = done.reduce((s, b) => s + (b.pageCount ?? 0), 0);
+
+  return (
+    <SectionCard padded={false} style={styles.chartCard}>
+      <View style={styles.stackHeader}>
+        <Text style={[styles.cardTitle, { color: theme.heading, marginBottom: 0 }]}>쌓아 올린 책</Text>
+        <Text style={[styles.stackMeta, { color: theme.textSecondary }]}>
+          {done.length}권{totalPages > 0 ? ` · ${totalPages.toLocaleString()}쪽` : ''}
+        </Text>
+      </View>
+      <View style={styles.stack}>
+        {done.map((b) => (
+          <Spine key={b.id} book={b} />
+        ))}
+        <View style={[styles.table, { backgroundColor: theme.border }]} />
+      </View>
+    </SectionCard>
+  );
+}
+
+function Spine({ book }: { book: Book }) {
+  const [base, shade] = coverColorsFor(book.id);
+  const height = spineThickness(book.pageCount);
+  const widthPct = 74 + (hashId(book.id) % 22); // 74–95%: varied book sizes
+  return (
+    <Pressable
+      onPress={() => router.push(`/book/${book.id}`)}
+      accessibilityRole="button"
+      accessibilityLabel={book.title}
+      style={({ pressed }) => [styles.spine, { height, width: `${widthPct}%`, backgroundColor: base }, pressed && styles.spinePressed]}>
+      <View style={[styles.spineTopEdge, { backgroundColor: shade }]} />
+      <Text numberOfLines={1} style={styles.spineTitle}>
+        {book.title}
+      </Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: SCREEN_PAD,
@@ -213,4 +282,30 @@ const styles = StyleSheet.create({
   genreTrack: { flex: 1, height: 9, borderRadius: Radii.full, overflow: 'hidden' },
   genreFill: { height: '100%', borderRadius: Radii.full },
   genreCount: { fontSize: 11.5, fontWeight: '600', width: 26, textAlign: 'right' },
+
+  // book stack (책탑)
+  stackHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  stackMeta: { fontSize: 12, fontWeight: '600' },
+  stack: { alignItems: 'center', paddingTop: 2 },
+  spine: {
+    borderRadius: 3,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    overflow: 'hidden',
+    marginBottom: 2,
+    shadowColor: '#2A1B0F',
+    shadowOpacity: 0.18,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1.5 },
+    elevation: 2,
+  },
+  spinePressed: { opacity: 0.82 },
+  spineTopEdge: { position: 'absolute', top: 0, left: 0, right: 0, height: 2, opacity: 0.55 },
+  spineTitle: { color: 'rgba(255,255,255,0.92)', fontSize: 11, fontWeight: '600', letterSpacing: -0.1 },
+  table: { width: '100%', height: 3, borderRadius: 2, marginTop: 7 },
 });
