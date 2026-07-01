@@ -21,6 +21,29 @@ import { useTheme } from '@/hooks/use-theme';
 import { ensureTags, updateBook, useBook, useTags } from '@/lib/store/bookshop-store';
 import type { Rating, ReadingStatus } from '@/types/models';
 
+// ── Date helpers (JS-only YYYY.MM.DD input, no native picker) ────
+/** ISO string → "YYYY.MM.DD" for display/editing. */
+const isoToInput = (iso?: string) => (iso ? iso.slice(0, 10).replace(/-/g, '.') : '');
+/** Keep digits only, format progressively as YYYY.MM.DD (max 8 digits). */
+const formatDateInput = (t: string) => {
+  const d = t.replace(/[^0-9]/g, '').slice(0, 8);
+  return [d.slice(0, 4), d.slice(4, 6), d.slice(6, 8)].filter(Boolean).join('.');
+};
+/** "YYYY.MM.DD" → ISO string, or undefined if not a valid full date. */
+const inputToIso = (s: string): string | undefined => {
+  const d = s.replace(/[^0-9]/g, '');
+  if (d.length !== 8) return undefined;
+  const y = +d.slice(0, 4);
+  const m = +d.slice(4, 6);
+  const day = +d.slice(6, 8);
+  const date = new Date(y, m - 1, day, 12); // noon local → avoids TZ date rollover
+  if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== day) return undefined;
+  return date.toISOString();
+};
+/** Empty → clear (undefined); invalid partial → keep the original (no accidental wipe). */
+const resolveDate = (input: string, original?: string) =>
+  input.trim() === '' ? undefined : inputToIso(input) ?? original;
+
 export default function BookEditScreen() {
   const theme = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,6 +60,9 @@ export default function BookEditScreen() {
   const [memo, setMemo] = useState(book?.memo ?? '');
   const [tagIds, setTagIds] = useState<string[]>(book?.tagIds ?? []);
   const [newTag, setNewTag] = useState('');
+  const [purchased, setPurchased] = useState(isoToInput(book?.purchasedDate));
+  const [started, setStarted] = useState(isoToInput(book?.startedDate));
+  const [finished, setFinished] = useState(isoToInput(book?.finishedDate));
 
   if (!book) {
     return (
@@ -74,6 +100,9 @@ export default function BookEditScreen() {
       rating: status === 'DONE' ? rating : undefined,
       memo: memo.trim() || undefined,
       tagIds,
+      purchasedDate: resolveDate(purchased, book.purchasedDate),
+      startedDate: resolveDate(started, book.startedDate),
+      finishedDate: resolveDate(finished, book.finishedDate),
     });
     router.back();
   };
@@ -122,6 +151,35 @@ export default function BookEditScreen() {
               </View>
             </>
           ) : null}
+
+          <Text style={[styles.label, { color: theme.eyebrow }]}>구매일</Text>
+          <FormInput
+            value={purchased}
+            onChangeText={(t) => setPurchased(formatDateInput(t))}
+            placeholder="YYYY.MM.DD"
+            keyboardType="number-pad"
+            containerStyle={styles.mb}
+          />
+
+          <Text style={[styles.label, { color: theme.eyebrow }]}>읽은 기간</Text>
+          <View style={[styles.row, styles.mb]}>
+            <FormInput
+              label="시작"
+              value={started}
+              onChangeText={(t) => setStarted(formatDateInput(t))}
+              placeholder="YYYY.MM.DD"
+              keyboardType="number-pad"
+              containerStyle={styles.flex}
+            />
+            <FormInput
+              label="완독"
+              value={finished}
+              onChangeText={(t) => setFinished(formatDateInput(t))}
+              placeholder="YYYY.MM.DD"
+              keyboardType="number-pad"
+              containerStyle={styles.flex}
+            />
+          </View>
 
           <Text style={[styles.label, { color: theme.eyebrow }]}>태그</Text>
           <TagSelector tags={tags} selectedIds={tagIds} onToggle={toggleTag} />
